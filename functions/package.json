@@ -1,0 +1,11 @@
+{
+  "name": "monitor-precos-functions",
+  "version": "1.0.0",
+  "description": "Dependências para funções serverless do monitor de preços",
+  "dependencies": {
+    "@woocommerce/woocommerce-rest-api": "^1.0.1",
+    "node-fetch": "^2.6.7",
+    "puppeteer-core": "^21.0.0",
+    "chrome-aws-lambda": "^10.1.0"
+  }
+}
