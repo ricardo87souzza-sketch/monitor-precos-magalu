@@ -10,10 +10,10 @@ consumerSecret: process.env.wc_consumer_secret,
 
   try {
     const response = await wc.get("products", {
-      category: "promocoes", 
+      category: "32", 
       per_page: 50,
       status: 'publish'
-    });
+});
     
     return {
       statusCode: 200,
