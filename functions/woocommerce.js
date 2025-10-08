@@ -3,8 +3,8 @@ const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 exports.handler = async function(event, context) {
   const wc = new WooCommerceRestApi({
     url: process.env.WOOCOMMERCE_URL,
-    consumerKey: process.env.WC_CONSUMER_KEY,
-    consumerSecret: process.env.WC_CONSUMER_SECRET,
+    consumerKey: process.env.wc_consumer_key,
+consumerSecret: process.env.wc_consumer_secret,
     version: "wc/v3"
   });
 
