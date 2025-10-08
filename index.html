@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Preços - WooCommerce + Magalu</title>
+    <meta name="description" content="Sistema profissional de monitoramento de preços entre WooCommerce e Magalu">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            color: var(--primary);
+            padding: 2rem 0;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            color: var(--dark);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .status-active {
+            background-color: var(--success);
+        }
+        
+        .status-inactive {
+            background-color: var(--danger);
+        }
+        
+        .product-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--light);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        
+        .product-item:hover {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            transform: translateX(5px);
+        }
+        
+        .product-info {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .product-price {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .price-old {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+        
+        .price-new {
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .price-increase {
+            color: var(--danger);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), #2980b9);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #219653);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        }
+        
+        .logs {
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logs h2 {
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .log-entry {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .log-entry:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding-left: 10px;
+        }
+        
+        .log-time {
+            color: #bdc3c7;
+            margin-right: 10px;
+        }
+        
+        .log-info {
+            color: var(--secondary);
+        }
+        
+        .log-success {
+            color: var(--success);
+        }
+        
+        .log-warning {
+            color: var(--warning);
+        }
+        
+        .log-error {
+            color: var(--danger);
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .product-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .product-price {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🔄 Monitor de Preços Profissional</h1>
+            <p class="subtitle">WooCommerce + Magalu • Automação Inteligente de Preços</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="controls">
+            <button id="startMonitor" class="btn-primary">🚀 Iniciar Monitoramento</button>
+            <button id="stopMonitor" class="btn-warning">⏸️ Parar Monitoramento</button>
+            <button id="manualCheck" class="btn-success">🔍 Verificação Manual</button>
+            <button id="exportLogs" class="btn-primary">📊 Exportar Relatório</button>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>📈 Status do Sistema</h2>
+                <p><span class="status-indicator status-inactive" id="statusIndicator"></span> 
+                   <span id="statusText">Monitoramento Parado</span></p>
+                <p>⏰ Próxima verificação: <span id="nextCheck">--:--:--</span></p>
+                <p>📦 Produtos monitorados: <span id="productsCount">0</span></p>
+                <p>🔄 Última atualização: <span id="lastUpdate">Nunca</span></p>
+                <p>💰 Economia total: <span id="totalSavings">R$ 0,00</span></p>
+            </div>
+            
+            <div class="card">
+                <h2>⚙️ Configurações</h2>
+                <div style="margin-bottom: 1rem;">
+                    <label for="interval">🕐 Intervalo (minutos):</label>
+                    <input type="number" id="interval" min="5" value="30" 
+                           style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <input type="checkbox" id="autoUpdate" checked>
+                    <label for="autoUpdate">✅ Atualizar preços automaticamente</label>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <input type="checkbox" id="socialNotify" checked>
+                    <label for="socialNotify">📢 Notificar redes sociais em promoções</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="emailAlerts">
+                    <label for="emailAlerts">📧 Alertas por email</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 Produtos em Monitoramento 
+                <span class="badge badge-success" id="activeProductsBadge">0 ativos</span>
+            </h2>
+            <div class="product-list" id="productList">
+                <div class="product-item" style="text-align: center; color: #95a5a6; padding: 2rem;">
+                    🔄 Clique em "Iniciar Monitoramento" para carregar os produtos...
+                </div>
+            </div>
+        </div>
+        
+        <div class="logs">
+            <h2>📋 Log de Atividades 
+                <span class="badge badge-info" id="logCount">0 entradas</span>
+            </h2>
+            <div id="logContainer">
+                <div class="log-entry">
+                    <span class="log-time">[Sistema]</span> 
+                    <span class="log-info">Aguardando inicialização do monitoramento...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado do sistema
+        const state = {
+            monitoring: false,
+            intervalId: null,
+            products: [],
+            logs: [],
+            totalSavings: 0
+        };
+        
+        // Elementos DOM
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const nextCheck = document.getElementById('nextCheck');
+        const productsCount = document.getElementById('productsCount');
+        const lastUpdate = document.getElementById('lastUpdate');
+        const totalSavings = document.getElementById('totalSavings');
+        const productList = document.getElementById('productList');
+        const logContainer = document.getElementById('logContainer');
+        const logCount = document.getElementById('logCount');
+        const activeProductsBadge = document.getElementById('activeProductsBadge');
+        const startMonitorBtn = document.getElementById('startMonitor');
+        const stopMonitorBtn = document.getElementById('stopMonitor');
+        const manualCheckBtn = document.getElementById('manualCheck');
+        const exportLogsBtn = document.getElementById('exportLogs');
+        const intervalInput = document.getElementById('interval');
+        const autoUpdateCheck = document.getElementById('autoUpdate');
+        const socialNotifyCheck = document.getElementById('socialNotify');
+        const emailAlertsCheck = document.getElementById('emailAlerts');
+        
+        // Função para adicionar log
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-time">[${timestamp}]</span> <span class="log-${type}">${message}</span>`;
+            logContainer.prepend(logEntry);
+            
+            // Atualizar contador
+            logCount.textContent = `${state.logs.length + 1} entradas`;
+            
+            // Manter apenas os últimos 50 logs
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+            
+            state.logs.push({ timestamp, message, type });
+        }
+        
+        // Função para atualizar status do sistema
+        function updateStatus() {
+            if (state.monitoring) {
+                statusIndicator.className = 'status-indicator status-active';
+                statusText.textContent = 'Monitoramento Ativo';
+                statusText.style.color = 'var(--success)';
+            } else {
+                statusIndicator.className = 'status-indicator status-inactive';
+                statusText.textContent = 'Monitoramento Parado';
+                statusText.style.color = 'var(--danger)';
+            }
+            
+            productsCount.textContent = state.products.length;
+            totalSavings.textContent = `R$ ${state.totalSavings.toFixed(2)}`;
+        }
+        
+        // Função para simular busca de produtos
+        function fetchPromotionProducts() {
+            return [
+                {
+                    id: 101,
+                    name: 'Smartphone Galaxy X Pro',
+                    ourPrice: 899.90,
+                    magaluPrice: null,
+                    magaluUrl: 'https://exemplo.magalu.com/smartphone-galaxy-x',
+                    lastChecked: null,
+                    status: 'pending',
+                    category: 'Eletrônicos'
+                },
+                {
+                    id: 102,
+                    name: 'Tablet Pro 10" 128GB',
+                    ourPrice: 1299.00,
+                    magaluPrice: null,
+                    magaluUrl: 'https://exemplo.magalu.com/tablet-pro-10',
+                    lastChecked: null,
+                    status: 'pending',
+                    category: 'Eletrônicos'
+                },
+                {
+                    id: 103,
+                    name: 'Fone de Ouvido Wireless Premium',
+                    ourPrice: 249.90,
+                    magaluPrice: null,
+                    magaluUrl: 'https://exemplo.magalu.com/fone-ouvido-wireless',
+                    lastChecked: null,
+                    status: 'pending',
+                    category: 'Áudio'
+                },
+                {
+                    id: 104,
+                    name: 'Smart TV 55" 4K UHD',
+                    ourPrice: 2199.00,
+                    magaluPrice: null,
+                    magaluUrl: 'https://exemplo.magalu.com/smart-tv-55-4k',
+                    lastChecked: null,
+                    status: 'pending',
+                    category: 'TV & Vídeo'
+                },
+                {
+                    id: 105,
+                    name: 'Notebook Gamer RTX 3050',
+                    ourPrice: 4599.00,
+                    magaluPrice: null,
+                    magaluUrl: 'https://exemplo.magalu.com/notebook-gamer',
+                    lastChecked: null,
+                    status: 'pending',
+                    category: 'Informática'
+                }
+            ];
+        }
+        
+        // Função para simular extração de preço
+        function extractMagaluPrice(product) {
+            const basePrice = product.ourPrice;
+            const variation = (Math.random() - 0.5) * 0.3; // Variação de ±15%
+            const newPrice = basePrice * (1 + variation);
+            return Math.round(newPrice * 100) / 100;
+        }
+        
+        // Função para atualizar preço
+        function updateWooCommercePrice(productId, newPrice) {
+            addLog(`✅ Preço atualizado: Produto ${productId} → R$ ${newPrice.toFixed(2)}`, 'success');
+            return true;
+        }
+        
+        // Função para notificar redes sociais
+        function notifySocialMedia(product) {
+            addLog(`📢 Promoção anunciada: ${product.name} por R$ ${product.magaluPrice.toFixed(2)}`, 'warning');
+            return true;
+        }
+        
+        // Função para renderizar produtos
+        function renderProducts() {
+            productList.innerHTML = '';
+            
+            if (state.products.length === 0) {
+                productList.innerHTML = `
+                    <div class="product-item" style="text-align: center; color: #95a5a6; padding: 2rem;">
+                        🔄 Nenhum produto carregado. Inicie o monitoramento.
+                    </div>
+                `;
+                return;
+            }
+            
+            let activeCount = 0;
+            
+            state.products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                
+                let priceDisplay = '';
+                let statusBadge = '';
+                
+                if (product.magaluPrice) {
+                    const priceDiff = product.magaluPrice - product.ourPrice;
+                    const diffPercent = ((priceDiff / product.ourPrice) * 100).toFixed(1);
+                    
+                    if (priceDiff < 0) {
+                        // Preço baixou
+                        priceDisplay = `
+                            <div class="product-price">
+                                <span class="price-old">R$ ${product.ourPrice.toFixed(2)}</span>
+                                <span class="price-new">R$ ${product.magaluPrice.toFixed(2)}</span>
+                                <span class="badge badge-success">-${Math.abs(diffPercent)}%</span>
+                            </div>
+                        `;
+                        statusBadge = '<span class="badge badge-success">PROMOÇÃO</span>';
+                        activeCount++;
+                    } else if (priceDiff > 0) {
+                        // Preço subiu
+                        priceDisplay = `
+                            <div class="product-price">
+                                <span>R$ ${product.ourPrice.toFixed(2)}</span>
+                                <span class="price-increase">Magalu: R$ ${product.magaluPrice.toFixed(2)}</span>
+                                <span class="badge badge-danger">+${diffPercent}%</span>
+                            </div>
+                        `;
+                        statusBadge = '<span class="badge badge-warning">AUMENTOU</span>';
+                    } else {
+                        priceDisplay = `
+                            <div class="product-price">
+                                <span>R$ ${product.ourPrice.toFixed(2)}</span>
+                                <span style="color: #95a5a6;">Preço igual</span>
+                            </div>
+                        `;
+                        statusBadge = '<span class="badge" style="background: #95a5a6;">ESTÁVEL</span>';
+                    }
+                } else {
+                    priceDisplay = `
+                        <div class="product-price">
+                            <span>R$ ${product.ourPrice.toFixed(2)}</span>
+                            <span style="color: #95a5a6;">Não verificado</span>
+                        </div>
+                    `;
+                    statusBadge = '<span class="badge" style="background: #95a5a6;">PENDENTE</span>';
+                }
+                
+                productItem.innerHTML = `
+                    <div class="product-info">
+                        <div class="product-name">${product.name} ${statusBadge}</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Categoria: ${product.category}</div>
+                        ${priceDisplay}
+                    </div>
+                `;
+                
+                productList.appendChild(productItem);
+            });
+            
+            activeProductsBadge.textContent = `${activeCount} ativos`;
+        }
+        
+        // Função principal de verificação
+        async function checkPrices() {
+            addLog('🔄 Iniciando verificação de preços...', 'info');
+            
+            if (state.products.length === 0) {
+                state.products = fetchPromotionProducts();
+                addLog(`📦 ${state.products.length} produtos carregados da categoria Promoções`, 'success');
+            }
+            
+            let updatedCount = 0;
+            let promotedCount = 0;
+            let savingsThisCycle = 0;
+            
+            for (const product of state.products) {
+                try {
+                    const magaluPrice = extractMagaluPrice(product);
+                    product.magaluPrice = magaluPrice;
+                    product.lastChecked = new Date();
+                    
+                    const priceDiff = magaluPrice - product.ourPrice;
+                    
+                    if (priceDiff !== 0 && autoUpdateCheck.checked) {
+                        if (priceDiff > 0) {
+                            // Preço subiu
+                            updateWooCommercePrice(product.id, magaluPrice);
+                            product.ourPrice = magaluPrice;
+                            product.status = 'updated';
+                            updatedCount++;
+                            addLog(`📈 ${product.name} - Aumentou para R$ ${magaluPrice.toFixed(2)}`, 'warning');
+                        } else {
+                            // Preço baixou
+                            const savings = product.ourPrice - magaluPrice;
+                            savingsThisCycle += savings;
+                            state.totalSavings += savings;
+                            
+                            updateWooCommercePrice(product.id, magaluPrice);
+                            product.ourPrice = magaluPrice;
+                            product.status = 'updated';
+                            updatedCount++;
+                            
+                            if (socialNotifyCheck.checked) {
+                                notifySocialMedia(product);
+                                promotedCount++;
+                            }
+                            
+                            addLog(`🎉 PROMOÇÃO: ${product.name} - R$ ${magaluPrice.toFixed(2)} (Economia: R$ ${savings.toFixed(2)})`, 'success');
+                        }
+                    } else {
+                        product.status = 'unchanged';
+                    }
+                } catch (error) {
+                    addLog(`❌ Erro em ${product.name}: ${error.message}`, 'error');
+                    product.status = 'error';
+                }
+            }
+            
+            renderProducts();
+            lastUpdate.textContent = new Date().toLocaleTimeString();
+            
+            addLog(`✅ Verificação concluída: ${updatedCount} atualizações, ${promotedCount} promoções, Economia: R$ ${savingsThisCycle.toFixed(2)}`, 'success');
+            
+            if (state.monitoring) {
+                const interval = parseInt(intervalInput.value) * 60 * 1000;
+                const nextCheckTime = new Date(Date.now() + interval);
+                nextCheck.textContent = nextCheckTime.toLocaleTimeString();
+            }
+        }
+        
+        // Event Listeners
+        startMonitorBtn.addEventListener('click', () => {
+            state.monitoring = true;
+            updateStatus();
+            checkPrices();
+            
+            const interval = parseInt(intervalInput.value) * 60 * 1000;
+            state.intervalId = setInterval(checkPrices, interval);
+            
+            addLog('🚀 Monitoramento iniciado com sucesso!', 'success');
+        });
+        
+        stopMonitorBtn.addEventListener('click', () => {
+            state.monitoring = false;
+            updateStatus();
+            
+            if (state.intervalId) {
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+            }
+            
+            nextCheck.textContent = '--:--:--';
+            addLog('⏸️ Monitoramento pausado', 'warning');
+        });
+        
+        manualCheckBtn.addEventListener('click', () => {
+            addLog('🔍 Verificação manual solicitada', 'info');
+            checkPrices();
+        });
+        
+        exportLogsBtn.addEventListener('click', () => {
+            const logText = state.logs.map(log => `[${log.timestamp}] ${log.message}`).join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs-monitor-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            addLog('📊 Relatório de logs exportado', 'info');
+        });
+        
+        // Inicialização
+        updateStatus();
+        addLog('✅ Sistema inicializado. Pronto para monitoramento.', 'success');
+        
+        // Simular logs iniciais
+        setTimeout(() => {
+            addLog('🔗 Conectado à API WooCommerce', 'success');
+            addLog('📡 Serviços de notificação carregados', 'success');
+            addLog('⚙️ Todas as configurações inicializadas', 'info');
+        }, 1000);
+    </script>
+</body>
+</html>
