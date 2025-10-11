@@ -1,12 +1,5 @@
 {
   "name": "monitor-precos-magalu",
   "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@woocommerce/woocommerce-rest-api": "^1.0.1",
-    "node-fetch": "^3.3.2"
-  },
-  "engines": {
-    "node": "18.x"
-  }
+  "dependencies": {}
 }
